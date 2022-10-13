@@ -114,7 +114,7 @@ float matEntries[16];		// Holds 16 floats (since cannot load doubles into a shad
 //     equal to (-Xmax,Xmax)x(-Ymax,Ymax)x(Zmin,Zmax)
 // The model/view matrix can be used to move objects to this position
 // Increase SceneXZradius if the solar system becomes bigger
-const double SceneXZradius = 7.5;       
+const double SceneXZradius = 9;       
 const double Xmax = SceneXZradius;                
 const double Ymax = 2.0;
 const double Zmax = SceneXZradius;
@@ -187,7 +187,7 @@ void myRenderScene() {
 
 	LinearMapR4 SunPosMatrix = viewMatrix;				// Place Sun at center of the scene
 	SunPosMatrix.Mult_glScale(.8);						// Scaling by (1, 1, 1) has no effect
-    double sunrevolveAngle = ( (DayOfYear / 365.0) * (PI2) ) / 2;
+    double sunrevolveAngle = (DayOfYear / 365.0) * PI2 * 8;
     SunPosMatrix.Mult_glRotate(sunrevolveAngle, 0.0, 1.0, 0.0);
     SunPosMatrix.Mult_glTranslate(0.0, 0.0, 1.5);		// Place the sun 2 units away from the middle 
     SunPosMatrix.DumpByColumns(matEntries);           // These two lines load the matrix into the shader
@@ -195,12 +195,10 @@ void myRenderScene() {
 	glVertexAttrib3f(vertColor_loc, 1.0f, 1.0f, 0.0f);     // Make the sun yellow
 	Sun.Render();
 
-    
 
     // SunPos2Matrix -> specificies position of the second sun
     // Sun2Matrix -> sets the size of the sun and its rotation 
     LinearMapR4 Sun2PosMatrix = viewMatrix;				// Place Sun at center of the scene
-    // SunPosMatrix.Mult_glScale(1.0);						// Scaling by (1, 1, 1) has no effect
     Sun2PosMatrix.Mult_glScale(.8);
     Sun2PosMatrix.Mult_glRotate(sunrevolveAngle, 0.0, 1.0, 0.0);
     Sun2PosMatrix.Mult_glTranslate(0.0, 0.0, -1.5);		// Place the sun 2 units away from the middle 
@@ -211,10 +209,11 @@ void myRenderScene() {
  
     // EarthPosMatrix - specifies position of the earth
     // EarthMatrix - specifies the size of the earth and its rotation on its axis
-	LinearMapR4 EarthPosMatrix = SunPosMatrix;
+	LinearMapR4 EarthPosMatrix = viewMatrix; // we hve to update the center of the thing 
     double revolveAngle = (DayOfYear / 365.0) * PI2; 
     EarthPosMatrix.Mult_glRotate(revolveAngle, 0.0, 1.0, 0.0);   // Revolve the earth around the sun
 	EarthPosMatrix.Mult_glTranslate(0.0, 0.0, 5.0);		// Place the earth five units away from the sun
+    EarthPosMatrix.Mult_glRotate(.42, 0.0, 0.0, -1.0); // 24 degrees -> .418 radians
 
 	LinearMapR4 EarthMatrix = EarthPosMatrix;
     double earthRotationAngle = (HourOfDay / 24.0)*PI2;
@@ -227,16 +226,16 @@ void myRenderScene() {
 
 
     // MyTorus -> Torus for the Earth's orbital path 
-    LinearMapR4 torusMatrix = SunPosMatrix;
+    LinearMapR4 torusMatrix = viewMatrix;
+    torusMatrix.Mult_glScale(5.0);
     torusMatrix.DumpByColumns(matEntries);
-    torusMatrix.Mult_glScale(2.5);
     glUniformMatrix4fv(modelviewMatLocation, 1, false, matEntries);
     glVertexAttrib3f(vertColor_loc, 1.0f, 0.0f, 0.0f);
     MyTorus.Render();
 
 
     // Takes care of Planet X planetXPosMatrix - controls placement and size of Planet X 
-    LinearMapR4 planetXPosMatrix = SunPosMatrix;
+    LinearMapR4 planetXPosMatrix = viewMatrix;
     double planetxrevolveAngle = (DayOfYearX / 500.0) * PI2;
     planetXPosMatrix.Mult_glRotate(planetxrevolveAngle, 0.0, 1.0, 0.0);   // Revolve the earth around the sun
     planetXPosMatrix.Mult_glTranslate(0.0, 0.0, 7.0);		// Place planet X seven units away from the sun
@@ -267,11 +266,6 @@ void myRenderScene() {
     glUniformMatrix4fv(modelviewMatLocation, 1, false, matEntries);
     glVertexAttrib3f(vertColor_loc, 0.66f, 1.0f, 0.0f);     // Make the moon bright gray
     Moon1.Render();
-
-
-
-
-
     
 	check_for_opengl_errors();   // Really a great idea to check for errors -- esp. good for debugging!
 }
