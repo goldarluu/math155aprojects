@@ -185,10 +185,6 @@ void myRenderScene() {
     }
 	glUseProgram(shaderProgram1);
 
-    LinearMapR4 torusMatrix = viewMatrix; 
-    glVertexAttrib3f(vertColor_loc, 1.0f, 0.0f, 0.0f); 
-    MyTorus.Render();
-
 	LinearMapR4 SunPosMatrix = viewMatrix;				// Place Sun at center of the scene
 	SunPosMatrix.Mult_glScale(.8);						// Scaling by (1, 1, 1) has no effect
     double sunrevolveAngle = ( (DayOfYear / 365.0) * (PI2) ) / 2;
@@ -228,16 +224,22 @@ void myRenderScene() {
 	glUniformMatrix4fv(modelviewMatLocation, 1, false, matEntries);
 	glVertexAttrib3f(vertColor_loc, 0.2f, 0.4f, 1.0f);     // Make the earth bright cyan-blue
 	Earth.Render();
-    // MyTorus -> Torus for the Earth's orbital path 
 
-    
+
+    // MyTorus -> Torus for the Earth's orbital path 
+    LinearMapR4 torusMatrix = SunPosMatrix;
+    torusMatrix.DumpByColumns(matEntries);
+    torusMatrix.Mult_glScale(2.5);
+    glUniformMatrix4fv(modelviewMatLocation, 1, false, matEntries);
+    glVertexAttrib3f(vertColor_loc, 1.0f, 0.0f, 0.0f);
+    MyTorus.Render();
+
 
     // Takes care of Planet X planetXPosMatrix - controls placement and size of Planet X 
     LinearMapR4 planetXPosMatrix = SunPosMatrix;
     double planetxrevolveAngle = (DayOfYearX / 500.0) * PI2;
     planetXPosMatrix.Mult_glRotate(planetxrevolveAngle, 0.0, 1.0, 0.0);   // Revolve the earth around the sun
     planetXPosMatrix.Mult_glTranslate(0.0, 0.0, 7.0);		// Place planet X seven units away from the sun
-
     planetXPosMatrix.Mult_glScale(0.5);                                  // Make radius 0.5.
     planetXPosMatrix.DumpByColumns(matEntries);
     glUniformMatrix4fv(modelviewMatLocation, 1, false, matEntries);
